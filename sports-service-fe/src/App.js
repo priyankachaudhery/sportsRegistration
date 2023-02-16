@@ -16,7 +16,7 @@ function App() {
         <Routes >
           <Route path="/" element={<Login setLoggedinUser={setLoggedinUser} />} errorElement={<ErrorPage />} />
           <Route path="register" element={<Register  setLoggedinUser={setLoggedinUser} />} errorElement={<ErrorPage />} />
-          <Route path="home" element={<Home user={loggedInUser} />} errorElement={<ErrorPage />}/>
+          <Route path="home" element={<Home user={loggedInUser} setLoggedinUser={setLoggedinUser} />} errorElement={<ErrorPage />}/>
         </Routes>
       </BrowserRouter>
     </UserContext.Provider>

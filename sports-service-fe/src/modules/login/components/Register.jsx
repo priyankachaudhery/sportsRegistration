@@ -13,7 +13,7 @@ export const Register = ({setLoggedinUser}) => {
     const [user, setUser] = useState({
         firstName:"", lastName:"",emailId:""
     });
-    const [snackbar,setShowSnackbar] = useSnackBar({message: 'Failed to register. Please try again.' , type:'error' });
+    const [snackbar,setShowSnackbar,setMessage] = useSnackBar({message: 'Failed to register. Please try again.' , type:'error' });
     const navigate = useNavigate();
 
     const handleChange = (e) =>{
@@ -23,10 +23,13 @@ export const Register = ({setLoggedinUser}) => {
 
     const registerUser = (e) =>{
             addUser(user).then(response => {
-                if(response){
+                if(response instanceof Object){
                     setLoggedinUser(response);
                     navigate('/home');
-                }else{
+                }else{ 
+                    if(response.includes("exists")){
+                        setMessage(response);
+                    }
                     setShowSnackbar(true);
                 }
             });

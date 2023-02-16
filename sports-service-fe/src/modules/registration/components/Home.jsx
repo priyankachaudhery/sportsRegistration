@@ -1,58 +1,39 @@
-import { RefreshTwoTone } from "@mui/icons-material";
-import { Box, Button, Grid, styled, Typography } from "@mui/material";
+import { Box, Grid, styled, Typography } from "@mui/material";
 import React, { useEffect, useMemo, useState } from "react";
 import { getAllEvents, getUserEvents } from "../api/RegistrationApi";
 import Event from "./EventCard";
 import Header from "./Header";
 
-export const Home = ({user}) =>{
+export const Home = ({user, setLoggedinUser}) =>{
     const [events, setEvents] = useState([]);
     const [userEventIds, setUserEventIds] = useState(new Set());
     const [userBusyTime,setUserBusyTime] = useState(new Set());
 
     useEffect(() =>{
-        refreshEvents();
-    },[]);
-
-    useEffect(() =>{ 
-        getUserEvents(user.id).then((response) =>{
-            let newUserEvents = new Set(response);
-            setUserEventIds(newUserEvents);
-            if(response.length != 0){
-                for(let i = 0; i < events.length; i++){
-                    if(newUserEvents.has(events[i].id)){
-                        updateBusyTime(events[i],'add');
-                    }
-                }
-            }
-        });
-    },[user]);
-
-    const refreshEvents = (actionFrom) =>{
         getAllEvents().then((refreshedEvents)=> {
             setEvents(refreshedEvents);
-            if(actionFrom == "button"){
-                getUserEvents(user.id).then((response) =>{
-                    let newUserEvents = new Set(response);
-                    setUserEventIds(new Set(response));
-                    if(response.length > 0){
-                        for(let i = 0; i < refreshedEvents.length; i++){
-                            if(newUserEvents.has(refreshedEvents[i].id)){
-                                updateBusyTime(refreshedEvents[i],'add','refresh');
-                            }
-                        }
-                    }                    
-                });
-            }
-        })
-    }
+        });
+        getUserEvents(user.id).then((response) =>{
+            setUserEventIds(new Set(response));
+        });
+    },[]);
 
-    const updateBusyTime = (event, action, caller) => {
+    useEffect(()=>{
+        if(events.length > 0  && userEventIds.size > 0){
+            let callerSet = new Set();
+            for(let i = 0; i < events.length; i++){
+                if(userEventIds.has(events[i].id)){
+                    callerSet = updateBusyTime(events[i],'add', callerSet);
+                }
+            }
+        }
+    },[events,userEventIds]);
+
+    const updateBusyTime = (event, action, callerSet) => {
         let startDate = new Date(event.startTime), 
         endDate = new Date(event.endTime), 
         halfHourly = (startDate.getMinutes > 0), 
-        busySet = new Set(caller ? [] :userBusyTime);
-        console.log(caller);
+        busySet = new Set(callerSet ? callerSet : userBusyTime);
         console.log('before', busySet);
         if(halfHourly){
             busySet[action](`${startDate.getHours()}:30`);
@@ -71,9 +52,11 @@ export const Home = ({user}) =>{
         }
         console.log('after',busySet);
         setUserBusyTime(busySet);
+        return busySet;
     } 
 
     const showAllEvents = () =>{
+        console.log("insideShowEvents");
         let userEvents = [], allEvents = [];
         events.forEach((event,index) => {
             let disabled = (userEventIds.size >= 3);
@@ -94,13 +77,13 @@ export const Home = ({user}) =>{
          return [allEvents,userEvents];
     }
 
-    const [allEvents,userEvents] = useMemo(showAllEvents,[events,userEventIds,userBusyTime]);
+     const [allEvents,userEvents] = useMemo(showAllEvents,[events,userEventIds,userBusyTime]);
 
     return (
         <Box>
-            <Header />
+            <Header setLoggedinUser={setLoggedinUser} />
             <Grid container>
-                <Grid item xs={12}><Button startIcon={<RefreshTwoTone/>} sx={{float:"right", margin:"8px", backgroundColor: '#efefef'}} onClick={refreshEvents.bind(this,"button")}>Refresh</Button></Grid>
+                {/* <Grid item xs={12}><Button startIcon={<RefreshTwoTone/>} sx={{float:"right", margin:"8px", backgroundColor: '#efefef'}} onClick={refreshEvents.bind(this,"button")}>Refresh</Button></Grid> */}
                 <Grid item xs={6} container>
                     <Grid item sx={{width: "100%", textAlign: 'center'}}>
                         <StyledTypography variant="h6"> All Events</StyledTypography>

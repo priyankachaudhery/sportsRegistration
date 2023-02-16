@@ -3,13 +3,16 @@ package com.pc.SportsRegistration.controller;
 import com.pc.SportsRegistration.model.SportEvent;
 import com.pc.SportsRegistration.model.User;
 import com.pc.SportsRegistration.service.UserService;
+import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,6 +31,10 @@ public class UserController {
         try{
             User savedUser = service.createUser(user);
             response = new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+        }catch (SQLIntegrityConstraintViolationException | ConstraintViolationException |
+                DataIntegrityViolationException e){
+            logger.error("User Already exists ", e.getCause());
+            response = new ResponseEntity<>("User already exists, please sign in", HttpStatus.IM_USED);
         }catch (Exception e){
             logger.error("Exception in creating User ", e.getCause());
             response = new ResponseEntity<>("Failed to create User", HttpStatus.INTERNAL_SERVER_ERROR);
